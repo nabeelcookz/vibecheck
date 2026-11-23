@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "outputDirectory": "public",
+  "functions": {
+    "api/charts.js": { "maxDuration": 60 },
+    "api/picks.js": { "maxDuration": 60 }
+  }
+}

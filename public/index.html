@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050507">
+<meta name="description" content="STAR_BOA: mood-based music queues that learn from your 1–10 ratings, plus live charts and new releases.">
+<title>STAR_BOA</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>STAR_BOA</h1>
+      <p class="sub">Music for the mood you're in, tuned to your ratings.</p>
+    </div>
+    <span class="pill" id="memPill">Memory: <b>this device</b></span>
+  </header>
+
+  <nav>
+    <a href="#mood" data-v="mood">Mood</a>
+    <a href="#trending" data-v="trending">Trending</a>
+    <a href="#taste" data-v="taste">Your taste</a>
+  </nav>
+
+  <!-- MOOD -->
+  <section id="v-mood">
+    <div class="hero" id="hero">
+      <svg viewBox="0 0 150 150" aria-hidden="true">
+        <g class="disc">
+          <circle cx="75" cy="75" r="72" fill="#000"/>
+          <circle cx="75" cy="75" r="60" fill="none" stroke="#ffffff14"/>
+          <circle cx="75" cy="75" r="50" fill="none" stroke="#ffffff10"/>
+          <circle cx="75" cy="75" r="40" fill="none" stroke="#ffffff14"/>
+          <path d="M30 40 A60 60 0 0 1 75 15" stroke="#ffffff30" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <circle cx="75" cy="75" r="24" fill="#9d4dff"/>
+          <rect x="66" y="66" width="18" height="3" rx="1.5" fill="#fff8"/>
+          <circle cx="75" cy="75" r="3.5" fill="#050507"/>
+        </g>
+      </svg>
+      <div>
+        <h2 id="heroTitle" class="h3">How are you feeling?</h2>
+        <p class="note" style="margin:0">Pick a mood, add detail if you like, and I'll line up a queue.</p>
+      </div>
+    </div>
+    <div class="chips" id="feel" style="margin-top:14px"></div>
+    <form class="ask" id="askForm">
+      <input id="words" placeholder="Add detail: Arabic only, leg day, rainy night…" maxlength="140" autocomplete="off">
+      <button class="primary" id="go" type="submit">Make my queue</button>
+    </form>
+    <p class="msg" id="goMsg" role="status"></p>
+
+    <div class="np" id="np" hidden>
+      <p class="note" id="npMood" style="margin:0 0 10px"></p>
+      <div class="player" id="playerBox" hidden><div id="ytPlayer"></div></div>
+      <div class="npT" id="npT"></div>
+      <div class="a" id="npA"></div>
+      <p class="why" id="npWhy"></p>
+      <p class="rq" id="npQ"></p>
+      <div id="npRate"></div>
+      <div class="row">
+        <button id="prev" type="button">Back</button>
+        <button id="playPause" class="primary" type="button">Play</button>
+        <button id="next" type="button">Next</button>
+      </div>
+      <div class="row" id="npAlt"></div>
+      <p class="note" id="npPos" style="margin:10px 0 0"></p>
+    </div>
+
+    <h2 id="picksHead" hidden>Up next</h2>
+    <ul class="list" id="picks"></ul>
+  </section>
+
+  <!-- TRENDING -->
+  <section id="v-trending" hidden>
+    <p class="note" id="chartWhen">Loading the latest charts…</p>
+    <h2>Just dropped</h2>
+    <p class="note" id="freshWhen"></p>
+    <ul class="list" id="trendFresh"></ul>
+    <h2>Charting now</h2>
+    <ul class="list" id="trendNow"></ul>
+    <h2>Biggest of the year</h2>
+    <ul class="list" id="trendYear"></ul>
+  </section>
+
+  <!-- TASTE -->
+  <section id="v-taste" hidden>
+    <h2>Where you listen</h2>
+    <p class="note">Song links open here first.</p>
+    <div class="chips" id="svc"></div>
+    <h2>What you're into</h2>
+    <label>Genres</label>
+    <div class="chips" id="genres"></div>
+    <label for="artists">Favourite artists</label>
+    <input id="artists" placeholder="e.g. The Weeknd, Amr Diab, Burna Boy">
+    <label for="notes">Anything else</label>
+    <textarea id="notes" placeholder="e.g. Big basslines. No heavy metal."></textarea>
+    <h2>Your ratings</h2>
+    <p class="note">7 or higher steers picks toward a sound; 4 or lower steers away. Each rating remembers the mood you gave it in.</p>
+    <div class="mem" id="ratedList"></div>
+    <h2>Backup</h2>
+    <p class="note">Your memory lives in this browser. Copy it to move it to another device.</p>
+    <div class="row">
+      <button id="exportBtn" type="button">Copy my data</button>
+      <button id="importBtn" type="button">Paste data</button>
+      <button id="clear" type="button">Forget everything</button>
+    </div>
+    <textarea id="importBox" hidden placeholder="Paste your STAR_BOA data here, then tap Paste data again."></textarea>
+    <p class="msg" id="dataMsg" role="status"></p>
+  </section>
+
+  <dialog id="passDlg">
+    <form method="dialog" id="passForm">
+      <h2 class="h3">Passcode</h2>
+      <p class="note">This STAR_BOA is private. Enter the passcode the owner gave you.</p>
+      <input id="passInput" type="password" autocomplete="current-password">
+      <div class="row"><button class="primary" value="ok">Unlock</button></div>
+    </form>
+  </dialog>
+</div>
+<script type="module" src="/app.js"></script>
+</body>
+</html>
