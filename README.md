@@ -18,6 +18,7 @@ Pick a mood (Motivated, Sad, Main character, Sleep, Workout and more), and Vibec
 - **Autoplay.** Songs play back-to-back in the YouTube IFrame player; when the queue ends, it fetches more for the same mood. Rating a song 3 or lower skips it.
 - **Always current, for free.** `/api/charts` reads Apple Music's daily chart feed (no key needed). "Just dropped" shows songs released in the last 30 days that are already charting. The CDN caches the result for 6 hours, so it stays fresh without a database or cron job.
 - **Runs on free tiers.** Gemini's free tier, Apple's free chart feed, the free YouTube Data API quota and Vercel's free hosting. No credit card needed.
+- **One-tap YouTube playlist.** Turn the current queue into a playlist that opens straight in the YouTube app (via `youtube.com/watch_videos`, no sign-in), then save it there. "Refresh queue" swaps in a fresh queue for the same mood.
 - **Import your playlists.** Paste a public or unlisted YouTube Music or YouTube playlist link and up to 200 of its songs seed your taste (as 8/10 until you rate them). Reading a playlist costs 1 quota unit per 50 songs, and it also caches each song's video ID for the player.
 - **Works where you listen.** One-tap links to YouTube Music, Apple Music, Spotify or YouTube, with your preferred service first.
 - **Installable.** A PWA with a manifest, icons and service worker, so you can add it to your home screen like a native app.
@@ -90,6 +91,9 @@ tests/      node:test unit tests
 - The YouTube Data API free quota is 10,000 units/day and a search costs 100, so roughly 100 new songs a day. Video IDs are cached in the browser and at the CDN to stretch that.
 - Gemini's free tier has daily request limits and Google may use free-tier requests to improve its products, so don't put anything private in the "Anything else" box. When the limit is hit, the app says so and works again after the daily reset.
 - Song suggestions come from a language model. They're checked for duplicates and format, but a suggested track can occasionally be wrong. The YouTube lookup skips songs it can't find.
+
+- Saving a queue directly into your Spotify or Apple Music library isn't supported: Spotify's playlist API needs each user approved in a developer allowlist, and Apple Music's needs a paid Apple Developer membership. Each song has one-tap links to both instead.
+- The one-tap YouTube playlist uses an unofficial YouTube link format, and each song not already cached costs a 100-unit search, so about 10 fresh playlists a day fit in the free quota.
 
 ## Roadmap
 

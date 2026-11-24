@@ -70,6 +70,8 @@ label { font-weight: 700; display: block; margin: 18px 0 6px; }
 .np .row button { flex: 1 1 auto; justify-content: center; }
 #playPause { background: var(--neon); border-color: var(--neon); color: var(--neonInk); box-shadow: 0 0 22px var(--neonGlow); }
 #playPause:hover { filter: brightness(1.08); }
+.btn.pop { background: var(--neon); border-color: var(--neon); color: var(--neonInk); box-shadow: 0 0 18px var(--neonGlow); justify-content: center; flex: 1 1 auto; }
+[hidden] { display: none !important; }
 .npT { font-size: clamp(24px, 6vw, 34px); font-weight: 800; line-height: 1.1; }
 .npT::before { content: "● "; color: var(--neon); font-size: .5em; vertical-align: middle; text-shadow: 0 0 10px var(--neon); }
 .player { position: relative; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: #000; margin-bottom: 14px; }

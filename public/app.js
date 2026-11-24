@@ -15,7 +15,7 @@ const SVC = {
 /* ---------------- state (persisted in localStorage) ---------------- */
 const STORE = "vibecheck.v1";
 const OLD_STORE = "star_boa.v1"; // the app used to be called STAR_BOA; carry old data over
-const blank = () => ({ genres: [], artists: "", notes: "", svc: "ytmusic", ratings: [], seen: [], moodLog: [], queue: [], qi: 0, qMood: "", qFeel: "", qWords: "", yt: {}, imports: [] });
+const blank = () => ({ genres: [], artists: "", notes: "", svc: "ytmusic", ratings: [], seen: [], moodLog: [], queue: [], qi: 0, qMood: "", qFeel: "", qWords: "", qPlaylist: "", yt: {}, imports: [] });
 let P = load();
 let charts = loadCharts();
 let feel = "";
@@ -88,6 +88,9 @@ function renderNP() {
   $("npRate").innerHTML = rateRow("queue", P.qi, s);
   $("npAlt").innerHTML = links(s, { first: false });
   $("npPos").textContent = `Song ${P.qi + 1} of ${P.queue.length}${ytReady ? " · plays the next one automatically" : ""}`;
+  $("openPl").hidden = !P.qPlaylist;
+  if (P.qPlaylist) $("openPl").href = P.qPlaylist;
+  $("mkPl").hidden = Boolean(P.qPlaylist);
   $("prev").disabled = P.qi <= 0;
   $("next").textContent = P.qi >= P.queue.length - 1 ? "More" : "Next";
 }
@@ -132,15 +135,17 @@ async function refreshCharts() {
 }
 
 let busy = false;
-async function makeQueue(more = false) {
+// mode: "new" (from the mood picker), "more" (append when the queue runs out), "refresh" (swap in a fresh queue, same mood)
+async function makeQueue(mode = "new") {
+  const more = mode === "more", reuse = mode !== "new";
   if (busy) return;
   const msg = $("goMsg");
   msg.className = "msg";
   const words = $("words").value.trim();
-  const f = more ? P.qFeel : feel;
-  const w = more ? P.qWords : words;
+  const f = reuse ? P.qFeel : feel;
+  const w = reuse ? P.qWords : words;
   if (!f && !w) { msg.className = "msg err"; msg.textContent = "Pick a mood or type how you feel first."; return; }
-  busy = true; $("go").disabled = true; $("hero").classList.add("spin"); $("heroTitle").textContent = "Building your queue…";
+  busy = true; $("go").disabled = true; $("refresh").disabled = true; $("hero").classList.add("spin"); $("heroTitle").textContent = "Building your queue…";
   try {
     const { picks } = await api("/api/picks", {
       method: "POST",
@@ -153,16 +158,19 @@ async function makeQueue(more = false) {
     const label = [f, w].filter(Boolean).join(": ");
     if (more) P.queue = P.queue.concat(picks); else { P.queue = picks; P.qi = 0; }
     P.qMood = label; P.qFeel = f; P.qWords = w;
-    if (!more) P.moodLog = [{ m: label, at: Date.now() }, ...P.moodLog].slice(0, 30);
+    if (mode === "new") P.moodLog = [{ m: label, at: Date.now() }, ...P.moodLog].slice(0, 30);
+    P.qPlaylist = ""; // the queue changed, so any YouTube playlist made from it is stale
     P.seen = P.seen.concat(picks.map(key)).slice(-200);
     save(); renderQueue();
-    msg.textContent = "Queue ready. Rate songs 1–10 as they play; the next queue learns from it.";
-    if (more) step(1); else $("np").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    msg.textContent = mode === "refresh" ? "Fresh queue, same mood." : "Queue ready. Rate songs 1–10 as they play; the next queue learns from it.";
+    if (more) step(1);
+    else if (mode === "refresh") { $("plStatus").textContent = "Fresh queue ready."; if (player) playCurrent(); }
+    else $("np").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
   } catch (e) {
     msg.className = "msg err";
     msg.textContent = e.status === 429 ? "Hit the free daily limit. Try again in a little while." : "Couldn't build a queue that time. Try again.";
   } finally {
-    busy = false; $("go").disabled = false; $("hero").classList.remove("spin"); $("heroTitle").textContent = "How are you feeling?";
+    busy = false; $("go").disabled = false; $("refresh").disabled = false; $("hero").classList.remove("spin"); $("heroTitle").textContent = "How are you feeling?";
   }
 }
 
@@ -219,7 +227,40 @@ function step(d) {
   save(); renderQueue();
   if (player) playCurrent();
 }
-function next() { if (P.qi >= P.queue.length - 1) makeQueue(true); else step(1); }
+function next() { if (P.qi >= P.queue.length - 1) makeQueue("more"); else step(1); }
+
+/* ---------------- one-tap YouTube playlist ---------------- */
+// youtube.com/watch_videos?video_ids=a,b,c opens the videos as a playlist in YouTube's app or site,
+// with no sign-in. From there you can save it to your library.
+async function makePlaylist() {
+  const status = $("plStatus");
+  const songs = P.queue.slice(0, 25);
+  if (!songs.length) return;
+  status.className = "msg"; status.textContent = "Finding your songs on YouTube…";
+  $("mkPl").disabled = true;
+  const ids = [];
+  try {
+    for (let i = 0; i < songs.length; i += 4) {
+      const batch = await Promise.allSettled(songs.slice(i, i + 4).map(videoId));
+      for (const r of batch) {
+        if (r.status === "fulfilled" && r.value) ids.push(r.value);
+        else if (r.reason?.status === 501) throw r.reason;
+      }
+      status.textContent = `Finding your songs on YouTube… ${Math.min(i + 4, songs.length)}/${songs.length}`;
+    }
+    if (!ids.length) throw new Error("none found");
+    P.qPlaylist = `https://www.youtube.com/watch_videos?video_ids=${ids.join(",")}`;
+    save(); renderNP();
+    status.textContent = `Playlist ready with ${ids.length} songs. Tap Open, then use Save in YouTube to keep it.`;
+  } catch (e) {
+    status.className = "msg err";
+    status.textContent = e.status === 501 ? "YouTube playlists need the YouTube API key set up on the server."
+      : e.status === 429 ? "Hit today's YouTube lookup limit. Try again tomorrow."
+      : "Couldn't build the playlist. Try again.";
+  } finally {
+    $("mkPl").disabled = false;
+  }
+}
 
 /* ---------------- events ---------------- */
 document.addEventListener("click", (e) => {
@@ -249,6 +290,8 @@ document.addEventListener("click", (e) => {
   switch (b.id) {
     case "prev": return step(-1);
     case "next": return next();
+    case "mkPl": return makePlaylist();
+    case "refresh": return makeQueue("refresh");
     case "playPause":
       if (ytOff) { window.open(SVC[svcOrder()[0]].u(q(P.queue[P.qi])), "_blank", "noopener"); return; }
       if (!player) return playCurrent();
@@ -258,7 +301,7 @@ document.addEventListener("click", (e) => {
     case "clear": return forget(b);
   }
 });
-$("askForm").addEventListener("submit", (e) => { e.preventDefault(); makeQueue(false); });
+$("askForm").addEventListener("submit", (e) => { e.preventDefault(); makeQueue("new"); });
 $("importForm").addEventListener("submit", (e) => { e.preventDefault(); importPlaylist(); });
 
 const PL_ERRORS = {
