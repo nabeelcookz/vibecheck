@@ -59,7 +59,7 @@ npm test                  # unit tests
 | `GEMINI_API_KEY` | Yes | Mood queues and "Just dropped". Free key from [Google AI Studio](https://aistudio.google.com/apikey). |
 | `YOUTUBE_API_KEY` | For autoplay | Finds each song's video. Enable "YouTube Data API v3" in [Google Cloud Console](https://console.cloud.google.com). Free. Without it, songs open in your music app instead. |
 | `CHART_COUNTRY` | No | Apple Music chart country, e.g. `us`, `gb`, `ae`. Default `us`. |
-| `GEMINI_MODEL` / `GEMINI_SEARCH_MODEL` | No | Defaults: `gemini-3.5-flash` for picks, `gemini-2.5-flash` for search-grounded new releases (Search grounding is free on that model). |
+| `GEMINI_MODEL` / `GEMINI_SEARCH_MODEL` | No | Defaults to `gemini-3.5-flash`. For new releases the app tries a few current Flash models with Google Search and falls back to Apple's recent releases if none is available on your free tier. |
 | `APP_PASSCODE` | No | Requires a passcode before building queues. |
 
 Charts work with no keys at all. Without `GEMINI_API_KEY`, "Just dropped" shows recently released songs climbing Apple's chart. If Apple's feed is unreachable, the app falls back to a snapshot in `lib/seed.js`.

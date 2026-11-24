@@ -32,11 +32,15 @@ export default async function handler(req, res) {
   // `freshSource` / `freshNote` say what happened (status codes only, never keys), to make issues easy to spot.
   charts.freshSource = "apple";
   if (process.env.GEMINI_API_KEY) {
-    const models = [...new Set([process.env.GEMINI_SEARCH_MODEL, "gemini-2.5-flash", "gemini-2.5-flash-lite"].filter(Boolean))];
+    // Gemini 2.5 is closed to new accounts, so try current Flash models. Stay inside the 60 s function limit.
+    const models = [...new Set([process.env.GEMINI_SEARCH_MODEL, "gemini-3.5-flash", "gemini-3.6-flash", "gemini-3.1-flash-lite"].filter(Boolean))];
     const notes = [];
+    const deadline = Date.now() + 45000;
     for (const model of models) {
+      const left = deadline - Date.now();
+      if (left < 8000) { notes.push(`${model}: skipped (time)`); continue; }
       try {
-        const text = await askGemini({ prompt: buildFreshPrompt(today.toISOString().slice(0, 10)), search: true, model, timeoutMs: 25000 });
+        const text = await askGemini({ prompt: buildFreshPrompt(today.toISOString().slice(0, 10)), search: true, model, timeoutMs: Math.min(25000, left) });
         const out = extractJson(text);
         const fresh = cleanCharts({ fresh: out?.fresh }).fresh;
         if (fresh.length < 4) { notes.push(`${model}: ${fresh.length} songs parsed`); continue; }
