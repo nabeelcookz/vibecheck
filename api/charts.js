@@ -28,20 +28,33 @@ export default async function handler(req, res) {
     return send(res, 200, { ...SEED_CHARTS, live: false }, { cache: CACHE_FALLBACK });
   }
 
+  // "Just dropped": try search-grounded Gemini models in order; keep Apple's list if all fail.
+  // `freshSource` / `freshNote` say what happened (status codes only, never keys), to make issues easy to spot.
+  charts.freshSource = "apple";
   if (process.env.GEMINI_API_KEY) {
-    try {
-      const text = await askGemini({ prompt: buildFreshPrompt(today.toISOString().slice(0, 10)), search: true });
-      const out = extractJson(text);
-      const fresh = cleanCharts({ fresh: out?.fresh }).fresh;
-      if (fresh.length >= 4) {
+    const models = [...new Set([process.env.GEMINI_SEARCH_MODEL, "gemini-2.5-flash", "gemini-2.5-flash-lite"].filter(Boolean))];
+    const notes = [];
+    for (const model of models) {
+      try {
+        const text = await askGemini({ prompt: buildFreshPrompt(today.toISOString().slice(0, 10)), search: true, model, timeoutMs: 25000 });
+        const out = extractJson(text);
+        const fresh = cleanCharts({ fresh: out?.fresh }).fresh;
+        if (fresh.length < 4) { notes.push(`${model}: ${fresh.length} songs parsed`); continue; }
         charts.fresh = fresh;
-        charts.freshWhen = cleanCharts(out).freshWhen;
+        charts.freshWhen = cleanCharts(out).freshWhen || "this week's releases";
+        charts.freshSource = model;
+        break;
+      } catch (e) {
+        const code = e.name === "AbortError" ? "timeout" : e.status === 429 ? "429 free limit" : (e.message.match(/Gemini (\d+)/)?.[1] || "error");
+        notes.push(`${model}: ${code}`);
+        console.error("fresh:", model, e.message);
       }
-    } catch (e) {
-      console.error("fresh:", e.message); // keep Apple's recently released songs
     }
+    if (charts.freshSource === "apple") charts.freshNote = notes.join("; ");
   }
   if (!charts.freshWhen) charts.freshWhen = "songs released in the last 3 weeks";
 
-  send(res, 200, { ...charts, live: true }, { cache: CACHE_OK });
+  // If new releases fell back to Apple, retry sooner than the usual 6 hours.
+  const cache = charts.freshSource === "apple" && process.env.GEMINI_API_KEY ? "public, s-maxage=3600" : CACHE_OK;
+  send(res, 200, { ...charts, live: true }, { cache });
 }

@@ -82,3 +82,10 @@ test("cleanCharts tolerates missing fields", () => {
   assert.deepEqual(c.fresh, []);
   assert.equal(songKey(c.now[0]), "a — b");
 });
+
+test("extractJson skips citation markers and accepts a bare array of songs", () => {
+  assert.deepEqual(extractJson('Per [1] and [2]: {"fresh":[{"t":"A","a":"B"}]}'), { fresh: [{ t: "A", a: "B" }] });
+  const arr = extractJson('```json\n[{"title":"Go Easy","artist":"Dua Lipa"}]\n```');
+  assert.equal(cleanCharts(arr).fresh[0].t, "Go Easy");
+  assert.equal(cleanCharts(arr).fresh[0].a, "Dua Lipa");
+});
