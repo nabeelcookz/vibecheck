@@ -1,6 +1,6 @@
 // POST /api/picks — builds a mood queue from the listener's profile and ratings.
 // Body: { profile, feel, words, charts: { now, fresh } }
-import { askClaude } from "../lib/claude.js";
+import { askGemini } from "../lib/gemini.js";
 import { buildPicksPrompt, extractJson, cleanPicks, sanitizeProfile } from "../lib/prompt.js";
 import { send, checkPasscode, rateLimit } from "../lib/http.js";
 
@@ -14,7 +14,7 @@ export default async function handler(req, res) {
 
   const charts = { now: (body.charts?.now || []).slice(0, 15), fresh: (body.charts?.fresh || []).slice(0, 15) };
   try {
-    const text = await askClaude({ prompt: buildPicksPrompt({ ...body, charts }), maxTokens: 2500 });
+    const text = await askGemini({ prompt: buildPicksPrompt({ ...body, charts }), json: true });
     const profile = sanitizeProfile(body.profile);
     const picks = cleanPicks(extractJson(text), {
       seen: profile.seen.concat(profile.ratings.map((r) => `${r.t} — ${r.a}`)),
@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     send(res, 200, { picks });
   } catch (e) {
     console.error("picks:", e.message);
-    send(res, e.status || 500, { error: "upstream_failed" });
+    send(res, e.status === 429 ? 429 : e.status || 500, { error: e.status === 429 ? "rate_limited" : "upstream_failed" });
   }
 }
 

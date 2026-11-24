@@ -16,7 +16,8 @@ Pick a mood (Motivated, Sad, Main character, Sleep, Workout and more), and STAR_
 - **Mood-first queues.** 8 moods, each with its own definition (e.g. Workout means 120–160 BPM and no slow songs; Sad means the queue never tries to cheer you up), plus free-text detail like "Arabic only" or "leg day".
 - **Per-mood learning.** Every 1–10 rating stores the mood it was given in. The recommender weights same-mood ratings most, and also uses your average rating per genre.
 - **Autoplay.** Songs play back-to-back in the YouTube IFrame player; when the queue ends, it fetches more for the same mood. Rating a song 3 or lower skips it.
-- **Always current.** `/api/charts` uses Claude with web search to pull the latest Billboard Hot 100, Spotify Global chart and New Music Friday releases. The CDN caches the result for 6 hours, so it stays fresh without a database or cron job.
+- **Always current, for free.** `/api/charts` reads Apple Music's daily chart feed (no key needed) and asks Gemini, grounded in Google Search, for this week's new releases. The CDN caches the result for 6 hours, so it stays fresh without a database or cron job.
+- **Runs on free tiers.** Gemini's free tier, Apple's free chart feed, the free YouTube Data API quota and Vercel's free hosting. No credit card needed.
 - **Works where you listen.** One-tap links to YouTube Music, Apple Music, Spotify or YouTube, with your preferred service first.
 - **Installable.** A PWA with a manifest, icons and service worker, so you can add it to your home screen like a native app.
 - **Private by default.** Your taste profile lives in your browser's localStorage, with copy/paste backup to move between devices.
@@ -26,19 +27,20 @@ Pick a mood (Motivated, Sad, Main character, Sleep, Workout and more), and STAR_
 ```
 Browser (public/)                         Vercel serverless (api/)
 ┌───────────────────────────┐   POST     ┌──────────────────────────────┐
-│ Mood + ratings + profile  │──────────▶ │ /api/picks                   │── Claude API
+│ Mood + ratings + profile  │──────────▶ │ /api/picks                   │── Gemini API (free)
 │ (localStorage)            │ ◀──────────│  builds prompt, validates    │
 │                           │   picks    │  JSON, drops repeats         │
 │ YouTube IFrame player     │   GET      ├──────────────────────────────┤
 │  plays queue, auto-next   │──────────▶ │ /api/youtube  song → videoId │── YouTube Data API
 │                           │   GET      ├──────────────────────────────┤   (cached 7 days)
-│ Trending tab              │──────────▶ │ /api/charts   web search     │── Claude + web search
-└───────────────────────────┘            └──────────────────────────────┘   (cached 6 hours)
+│ Trending tab              │──────────▶ │ /api/charts                  │── Apple Music chart feed
+└───────────────────────────┘            └──────────────────────────────┘   + Gemini w/ Google Search
+                                                                             (cached 6 hours)
 ```
 
-- `lib/prompt.js` holds all prompt-building and output-cleaning logic as pure functions, so it's unit-tested without network calls.
+- `lib/prompt.js` (prompts and output cleaning) and `lib/apple.js` (chart parsing) are pure functions, unit-tested without network calls.
 - API keys never reach the browser. All third-party calls go through the serverless functions.
-- An optional `APP_PASSCODE` and a per-IP rate limit stop strangers from spending your API credits.
+- An optional `APP_PASSCODE` and a per-IP rate limit stop strangers from using up your free quota.
 
 ## Run it locally
 
@@ -54,12 +56,13 @@ npm test                  # unit tests
 
 | Variable | Required | What it does |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | Yes | Mood queues and live charts. Get one at [platform.claude.com](https://platform.claude.com). |
-| `YOUTUBE_API_KEY` | For autoplay | Finds each song's video. Enable "YouTube Data API v3" in [Google Cloud Console](https://console.cloud.google.com). Without it, songs open in your music app instead. |
-| `CLAUDE_MODEL` | No | Defaults to `claude-sonnet-5-5`. |
+| `GEMINI_API_KEY` | Yes | Mood queues and "Just dropped". Free key from [Google AI Studio](https://aistudio.google.com/apikey). |
+| `YOUTUBE_API_KEY` | For autoplay | Finds each song's video. Enable "YouTube Data API v3" in [Google Cloud Console](https://console.cloud.google.com). Free. Without it, songs open in your music app instead. |
+| `CHART_COUNTRY` | No | Apple Music chart country, e.g. `us`, `gb`, `ae`. Default `us`. |
+| `GEMINI_MODEL` / `GEMINI_SEARCH_MODEL` | No | Defaults: `gemini-3.5-flash` for picks, `gemini-2.5-flash` for search-grounded new releases (Search grounding is free on that model). |
 | `APP_PASSCODE` | No | Requires a passcode before building queues. |
 
-Without `ANTHROPIC_API_KEY`, the Trending tab falls back to a built-in snapshot in `lib/seed.js`.
+Charts work with no keys at all. Without `GEMINI_API_KEY`, "Just dropped" shows recently released songs climbing Apple's chart. If Apple's feed is unreachable, the app falls back to a snapshot in `lib/seed.js`.
 
 ## Deploy to Vercel
 
@@ -72,7 +75,7 @@ Without `ANTHROPIC_API_KEY`, the Trending tab falls back to a built-in snapshot 
 
 ```
 api/        serverless routes: picks, charts, youtube
-lib/        prompt logic (tested), Claude client, HTTP helpers, fallback chart data
+lib/        prompt + chart parsing (tested), Gemini client, HTTP helpers, fallback chart data
 public/     the app: index.html, styles.css, app.js, PWA manifest, service worker, icons
 scripts/    zero-dependency local dev server
 tests/      node:test unit tests
@@ -82,6 +85,7 @@ tests/      node:test unit tests
 
 - Mobile browsers pause YouTube playback when the screen locks or the app is in the background. That's a YouTube restriction.
 - The YouTube Data API free quota is 10,000 units/day and a search costs 100, so roughly 100 new songs a day. Video IDs are cached in the browser and at the CDN to stretch that.
+- Gemini's free tier has daily request limits and Google may use free-tier requests to improve its products, so don't put anything private in the "Anything else" box. When the limit is hit, the app says so and works again after the daily reset.
 - Song suggestions come from a language model. They're checked for duplicates and format, but a suggested track can occasionally be wrong. The YouTube lookup skips songs it can't find.
 
 ## Roadmap

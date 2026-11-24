@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  sanitizeProfile, genreAverages, buildPicksPrompt, buildChartsPrompt,
+  sanitizeProfile, genreAverages, buildPicksPrompt, buildFreshPrompt,
   extractJson, cleanPicks, cleanCharts, songKey,
 } from "../lib/prompt.js";
 
@@ -49,8 +49,8 @@ test("sleep queues are longer", () => {
   assert.match(buildPicksPrompt({ feel: "Sad" }), /10-song/);
 });
 
-test("charts prompt carries today's date", () => {
-  assert.match(buildChartsPrompt("2026-11-24"), /Today is 2026-11-24/);
+test("new-releases prompt carries today's date", () => {
+  assert.match(buildFreshPrompt("2026-11-24"), /Today is 2026-11-24/);
 });
 
 test("extractJson handles prose, code fences and braces inside strings", () => {

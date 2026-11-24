@@ -158,7 +158,7 @@ async function makeQueue(more = false) {
     if (more) step(1); else $("np").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
   } catch (e) {
     msg.className = "msg err";
-    msg.textContent = e.status === 429 ? "Too many requests. Try again in a bit." : "Couldn't build a queue that time. Try again.";
+    msg.textContent = e.status === 429 ? "Hit the free daily limit. Try again in a little while." : "Couldn't build a queue that time. Try again.";
   } finally {
     busy = false; $("go").disabled = false; $("hero").classList.remove("spin"); $("heroTitle").textContent = "How are you feeling?";
   }
