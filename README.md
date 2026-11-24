@@ -1,8 +1,8 @@
-# STAR_BOA
+# Vibecheck
 
 **Music for the mood you're in, tuned to how you rate songs.**
 
-Pick a mood (Motivated, Sad, Main character, Sleep, Workout and more), and STAR_BOA builds a queue that plays automatically in an embedded YouTube player. Rate each song 1–10 as it plays and the next queue gets sharper. Ratings remember the mood they were given in, so a sad song you love doesn't sneak into your workout playlist. The Trending tab shows the current charts and this week's new releases, refreshed automatically.
+Pick a mood (Motivated, Sad, Main character, Sleep, Workout and more), and Vibecheck builds a queue that plays automatically in an embedded YouTube player. Rate each song 1–10 as it plays and the next queue gets sharper. Ratings remember the mood they were given in, so a sad song you love doesn't sneak into your workout playlist. The Trending tab shows the current charts and this week's new releases, refreshed automatically.
 
 <p>
   <img src="docs/screenshot-mood.png" width="300" alt="Mood picker">
@@ -48,8 +48,8 @@ Browser (public/)                         Vercel serverless (api/)
 Requires Node 22.9+. There are no dependencies to install.
 
 ```bash
-git clone https://github.com/<you>/star-boa.git
-cd star-boa
+git clone https://github.com/<you>/vibecheck.git
+cd vibecheck
 cp .env.example .env      # add your keys
 npm run dev               # http://localhost:3000
 npm test                  # unit tests

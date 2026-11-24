@@ -1,6 +1,6 @@
 {
-  "name": "STAR_BOA",
-  "short_name": "STAR_BOA",
+  "name": "Vibecheck",
+  "short_name": "Vibecheck",
   "description": "Mood-based music queues that learn from your 1–10 ratings.",
   "start_url": "/#mood",
   "display": "standalone",

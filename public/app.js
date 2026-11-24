@@ -1,4 +1,4 @@
-// STAR_BOA front end. No framework, no build step: one ES module.
+// Vibecheck front end. No framework, no build step: one ES module.
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const key = (s) => `${s.t} — ${s.a}`.toLowerCase().trim();
@@ -13,21 +13,22 @@ const SVC = {
 };
 
 /* ---------------- state (persisted in localStorage) ---------------- */
-const STORE = "star_boa.v1";
+const STORE = "vibecheck.v1";
+const OLD_STORE = "star_boa.v1"; // the app used to be called STAR_BOA; carry old data over
 const blank = () => ({ genres: [], artists: "", notes: "", svc: "ytmusic", ratings: [], seen: [], moodLog: [], queue: [], qi: 0, qMood: "", qFeel: "", qWords: "", yt: {}, imports: [] });
 let P = load();
 let charts = loadCharts();
 let feel = "";
 
 function load() {
-  try { return { ...blank(), ...JSON.parse(localStorage.getItem(STORE) || "{}") }; } catch { return blank(); }
+  try { return { ...blank(), ...JSON.parse(localStorage.getItem(STORE) || localStorage.getItem(OLD_STORE) || "{}") }; } catch { return blank(); }
 }
 function save() {
   try { localStorage.setItem(STORE, JSON.stringify(P)); $("memPill").innerHTML = "Memory: <b>saved on this device</b>"; }
   catch { $("memPill").innerHTML = "Memory: <b>not available</b>"; }
 }
 function loadCharts() {
-  try { return JSON.parse(localStorage.getItem("star_boa.charts")) || { now: [], fresh: [], year: [] }; } catch { return { now: [], fresh: [], year: [] }; }
+  try { return JSON.parse(localStorage.getItem("vibecheck.charts")) || { now: [], fresh: [], year: [] }; } catch { return { now: [], fresh: [], year: [] }; }
 }
 
 /* ---------------- rendering ---------------- */
@@ -108,7 +109,7 @@ function renderFeel() { chips($("feel"), FEEL.map((f) => [f, f]), feel ? [feel] 
 function renderAll() { renderQueue(); renderCharts(); renderTaste(); renderFeel(); }
 
 /* ---------------- API ---------------- */
-function passcode() { try { return localStorage.getItem("star_boa.pass") || ""; } catch { return ""; } }
+function passcode() { try { return localStorage.getItem("vibecheck.pass") || localStorage.getItem("star_boa.pass") || ""; } catch { return ""; } }
 async function api(path, opts = {}) {
   const r = await fetch(path, { ...opts, headers: { "content-type": "application/json", "x-app-passcode": passcode(), ...(opts.headers || {}) } });
   const data = await r.json().catch(() => ({}));
@@ -119,14 +120,14 @@ async function api(path, opts = {}) {
 function askPasscode() {
   return new Promise((resolve) => {
     const d = $("passDlg");
-    d.addEventListener("close", () => { try { localStorage.setItem("star_boa.pass", $("passInput").value); } catch {} resolve(); }, { once: true });
+    d.addEventListener("close", () => { try { localStorage.setItem("vibecheck.pass", $("passInput").value); } catch {} resolve(); }, { once: true });
     d.showModal();
   });
 }
 async function refreshCharts() {
   try {
     const c = await api("/api/charts");
-    if (c?.now?.length) { charts = c; try { localStorage.setItem("star_boa.charts", JSON.stringify(c)); } catch {} renderCharts(); }
+    if (c?.now?.length) { charts = c; try { localStorage.setItem("vibecheck.charts", JSON.stringify(c)); } catch {} renderCharts(); }
   } catch { if (!charts.now?.length) $("chartWhen").textContent = "Couldn't load charts. Check your connection."; }
 }
 
@@ -300,7 +301,7 @@ for (const id of ["artists", "notes"]) $(id).addEventListener("input", () => {
 
 async function copyData() {
   const out = JSON.stringify({ ...P, yt: {} });
-  try { await navigator.clipboard.writeText(out); $("dataMsg").textContent = "Copied. Paste it into STAR_BOA on your other device."; }
+  try { await navigator.clipboard.writeText(out); $("dataMsg").textContent = "Copied. Paste it into Vibecheck on your other device."; }
   catch { $("importBox").hidden = false; $("importBox").value = out; $("importBox").select(); $("dataMsg").textContent = "Copy the text above."; }
 }
 function importData() {
@@ -311,7 +312,7 @@ function importData() {
     if (!Array.isArray(d.ratings)) throw 0;
     P = { ...blank(), ...d }; save(); renderAll();
     box.hidden = true; $("dataMsg").textContent = `Imported ${P.ratings.length} ratings.`;
-  } catch { $("dataMsg").textContent = "That doesn't look like STAR_BOA data."; }
+  } catch { $("dataMsg").textContent = "That doesn't look like Vibecheck data."; }
 }
 let armed = false;
 function forget(b) {

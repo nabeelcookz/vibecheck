@@ -31,4 +31,4 @@ http.createServer(async (req, res) => {
     res.statusCode = 404;
     res.end("Not found");
   }
-}).listen(PORT, () => console.log(`STAR_BOA running at http://localhost:${PORT}`));
+}).listen(PORT, () => console.log(`Vibecheck running at http://localhost:${PORT}`));

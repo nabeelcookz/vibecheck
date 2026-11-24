@@ -1,5 +1,5 @@
 {
-  "name": "star-boa",
+  "name": "vibecheck",
   "version": "1.0.0",
   "description": "Mood-based music queues that learn from your 1–10 ratings, with live charts and an autoplaying YouTube player.",
   "type": "module",
