@@ -1,6 +1,6 @@
 // Minimal service worker: caches the app shell so STAR_BOA opens instantly and installs as an app.
 // API calls always go to the network (charts and picks must be fresh).
-const CACHE = "star-boa-v1";
+const CACHE = "star-boa-v2";
 const SHELL = ["/", "/index.html", "/styles.css", "/app.js", "/icon.svg", "/manifest.webmanifest"];
 
 self.addEventListener("install", (e) => {

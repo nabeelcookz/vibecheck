@@ -18,6 +18,7 @@ Pick a mood (Motivated, Sad, Main character, Sleep, Workout and more), and STAR_
 - **Autoplay.** Songs play back-to-back in the YouTube IFrame player; when the queue ends, it fetches more for the same mood. Rating a song 3 or lower skips it.
 - **Always current, for free.** `/api/charts` reads Apple Music's daily chart feed (no key needed). "Just dropped" shows songs released in the last 30 days that are already charting. The CDN caches the result for 6 hours, so it stays fresh without a database or cron job.
 - **Runs on free tiers.** Gemini's free tier, Apple's free chart feed, the free YouTube Data API quota and Vercel's free hosting. No credit card needed.
+- **Import your playlists.** Paste a public or unlisted YouTube Music or YouTube playlist link and up to 200 of its songs seed your taste (as 8/10 until you rate them). Reading a playlist costs 1 quota unit per 50 songs, and it also caches each song's video ID for the player.
 - **Works where you listen.** One-tap links to YouTube Music, Apple Music, Spotify or YouTube, with your preferred service first.
 - **Installable.** A PWA with a manifest, icons and service worker, so you can add it to your home screen like a native app.
 - **Private by default.** Your taste profile lives in your browser's localStorage, with copy/paste backup to move between devices.
@@ -57,7 +58,7 @@ npm test                  # unit tests
 | Variable | Required | What it does |
 |---|---|---|
 | `GEMINI_API_KEY` | Yes | Mood queues. Free key from [Google AI Studio](https://aistudio.google.com/apikey). |
-| `YOUTUBE_API_KEY` | For autoplay | Finds each song's video. Enable "YouTube Data API v3" in [Google Cloud Console](https://console.cloud.google.com). Free. Without it, songs open in your music app instead. |
+| `YOUTUBE_API_KEY` | For autoplay and playlist import | Finds each song's video and reads playlists. Enable "YouTube Data API v3" in [Google Cloud Console](https://console.cloud.google.com). Free. Without it, songs open in your music app instead. |
 | `CHART_COUNTRY` | No | Apple Music chart country, e.g. `us`, `gb`, `ae`. Default `us`. |
 | `GEMINI_MODEL` / `GEMINI_SEARCH_MODEL` | No | Defaults to `gemini-3.5-flash`. For new releases the app tries a few current Flash models with Google Search and falls back to Apple's recent releases if none is available on your free tier. |
 | `APP_PASSCODE` | No | Requires a passcode before building queues. |
@@ -76,7 +77,7 @@ Charts work with no keys at all. If Apple's feed is unreachable, the app falls b
 ## Project structure
 
 ```
-api/        serverless routes: picks, charts, youtube
+api/        serverless routes: picks, charts, youtube, playlist
 lib/        prompt + chart parsing (tested), Gemini client, HTTP helpers, fallback chart data
 public/     the app: index.html, styles.css, app.js, PWA manifest, service worker, icons
 scripts/    zero-dependency local dev server
@@ -92,6 +93,7 @@ tests/      node:test unit tests
 
 ## Roadmap
 
+- Sign in with Google to import private playlists (like Liked Music)
 - Optional accounts (Supabase) to sync ratings across devices
 - Export a queue as a YouTube Music or Spotify playlist
 - Taste insights page: favourite genres per mood over time
