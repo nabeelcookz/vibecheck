@@ -14,7 +14,7 @@ const SVC = {
 
 /* ---------------- state (persisted in localStorage) ---------------- */
 const STORE = "star_boa.v1";
-const blank = () => ({ genres: [], artists: "", notes: "", svc: "ytmusic", ratings: [], seen: [], moodLog: [], queue: [], qi: 0, qMood: "", qFeel: "", qWords: "", yt: {} });
+const blank = () => ({ genres: [], artists: "", notes: "", svc: "ytmusic", ratings: [], seen: [], moodLog: [], queue: [], qi: 0, qMood: "", qFeel: "", qWords: "", yt: {}, imports: [] });
 let P = load();
 let charts = loadCharts();
 let feel = "";
@@ -98,7 +98,8 @@ function renderTaste() {
   chips($("genres"), GENRES.map((g) => [g, g]), P.genres, "data-genre");
   if (document.activeElement !== $("artists")) $("artists").value = P.artists;
   if (document.activeElement !== $("notes")) $("notes").value = P.notes;
-  const rated = [...P.ratings].sort((a, b) => b.r - a.r || (b.at || 0) - (a.at || 0));
+  $("plList").innerHTML = P.imports.map((p) => `<span>${esc(p.title)} · ${p.n} songs<button type="button" aria-label="Remove ${esc(p.title)}" data-rmpl="${esc(p.id)}">×</button></span>`).join("");
+  const rated = P.ratings.filter((r) => r.src !== "playlist").sort((a, b) => b.r - a.r || (b.at || 0) - (a.at || 0));
   $("ratedList").innerHTML = rated.length
     ? rated.map((s) => `<span><b class="score">${s.r}</b>&nbsp;${esc(s.t)} · ${esc(s.a)}${s.m ? ` <i>(${esc(s.m)})</i>` : ""}<button type="button" aria-label="Remove ${esc(s.t)}" data-unrate="${esc(key(s))}">×</button></span>`).join("")
     : `<p class="empty">Nothing rated yet. Rate any song 1–10 and it shows up here.</p>`;
@@ -227,12 +228,18 @@ document.addEventListener("click", (e) => {
   if (d.feel) { feel = feel === d.feel ? "" : d.feel; renderFeel(); return; }
   if (d.svc) { P.svc = d.svc; save(); renderAll(); return; }
   if (d.genre) { const j = P.genres.indexOf(d.genre); j < 0 ? P.genres.push(d.genre) : P.genres.splice(j, 1); save(); renderTaste(); return; }
+  if (d.rmpl) {
+    P.ratings = P.ratings.filter((r) => !(r.src === "playlist" && r.pl === d.rmpl));
+    P.imports = P.imports.filter((p) => p.id !== d.rmpl);
+    save(); renderAll(); $("plMsg").textContent = "Playlist removed. Songs you rated yourself were kept.";
+    return;
+  }
   if (d.unrate) { P.ratings = P.ratings.filter((x) => key(x) !== d.unrate); save(); renderAll(); return; }
   if (d.act === "jump") { P.qi = +d.i; save(); renderQueue(); playCurrent(); $("np").scrollIntoView({ block: "nearest" }); return; }
   if (d.act === "rate") {
     const s = SRC[d.src]()[+d.i];
     if (!s) return;
-    P.ratings = [{ t: s.t, a: s.a, g: s.g || "", r: +d.r, m: d.src === "queue" ? P.qFeel : "", at: Date.now() }, ...P.ratings.filter((x) => key(x) !== key(s))].slice(0, 300);
+    P.ratings = [{ t: s.t, a: s.a, g: s.g || "", r: +d.r, m: d.src === "queue" ? P.qFeel : "", at: Date.now() }, ...P.ratings.filter((x) => key(x) !== key(s))].slice(0, 600);
     save(); renderAll();
     // Rating a song in the player before it ends means "next, please" only if it's low.
     if (b.closest("#np") && +d.r <= 3) setTimeout(next, 500);
@@ -251,6 +258,39 @@ document.addEventListener("click", (e) => {
   }
 });
 $("askForm").addEventListener("submit", (e) => { e.preventDefault(); makeQueue(false); });
+$("importForm").addEventListener("submit", (e) => { e.preventDefault(); importPlaylist(); });
+
+const PL_ERRORS = {
+  bad_playlist_link: "That doesn't look like a playlist link. In YouTube Music, open the playlist and use ⋮ → Share → Copy link.",
+  private_auto_list: "Liked Music is always private, so it can't be imported directly. In YouTube Music, open it, tap ⋮ → Save to playlist → New playlist, set it to Unlisted, then import that link.",
+  playlist_not_found_or_private: "Couldn't open that playlist. Make sure it's Public or Unlisted, not Private. (Liked Music is always private: save it to a new Unlisted playlist first.)",
+  youtube_not_configured: "Playlist import needs the YouTube API key set up on the server.",
+  rate_limited: "Too many imports just now. Try again in a bit.",
+};
+async function importPlaylist() {
+  const link = $("plLink").value.trim();
+  const msg = $("plMsg");
+  msg.className = "msg";
+  if (!link) { msg.className = "msg err"; msg.textContent = "Paste a playlist link first."; return; }
+  $("plGo").disabled = true; msg.textContent = "Reading your playlist…";
+  try {
+    const pl = await api(`/api/playlist?list=${encodeURIComponent(link)}`);
+    const have = new Set(P.ratings.map(key));
+    const fresh = pl.songs.filter((s) => !have.has(key(s)));
+    for (const s of pl.songs) if (s.id) P.yt[key(s)] = s.id; // saves a YouTube search per song later
+    P.ratings = P.ratings.concat(fresh.map((s) => ({ t: s.t, a: s.a, g: "", r: 8, m: "", src: "playlist", pl: pl.id, at: Date.now() }))).slice(0, 600);
+    P.imports = [{ id: pl.id, title: pl.title, n: fresh.length, at: Date.now() }, ...P.imports.filter((p) => p.id !== pl.id)];
+    save(); renderAll();
+    $("plLink").value = "";
+    const skipped = pl.songs.length - fresh.length;
+    msg.textContent = `Imported ${fresh.length} songs from "${pl.title}"${skipped ? ` (${skipped} you'd already rated)` : ""}${pl.more ? ". Only the first 200 are read" : ""}. Your next queue will use them.`;
+  } catch (e) {
+    msg.className = "msg err";
+    msg.textContent = PL_ERRORS[e.code] || "Couldn't import that playlist. Try again.";
+  } finally {
+    $("plGo").disabled = false;
+  }
+}
 let typing = 0;
 for (const id of ["artists", "notes"]) $(id).addEventListener("input", () => {
   clearTimeout(typing);

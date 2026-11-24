@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   if (!checkPasscode(req, res) || !rateLimit(req, res, { max: 30 })) return;
 
   const body = typeof req.body === "string" ? safeParse(req.body) : req.body || {};
-  if (JSON.stringify(body).length > 100_000) return send(res, 413, { error: "too_large" });
+  if (JSON.stringify(body).length > 200_000) return send(res, 413, { error: "too_large" });
   if (!body.feel && !body.words) return send(res, 400, { error: "mood_required" });
 
   const charts = { now: (body.charts?.now || []).slice(0, 15), fresh: (body.charts?.fresh || []).slice(0, 15) };

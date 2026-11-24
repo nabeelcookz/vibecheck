@@ -94,6 +94,14 @@
     <h2>Where you listen</h2>
     <p class="note">Song links open here first.</p>
     <div class="chips" id="svc"></div>
+    <h2>Import a playlist</h2>
+    <p class="note">Paste a public or unlisted YouTube Music or YouTube playlist link. Its songs count as 8/10 until you rate them yourself.</p>
+    <form class="ask" id="importForm">
+      <input id="plLink" placeholder="https://music.youtube.com/playlist?list=…" inputmode="url" autocomplete="off">
+      <button class="primary" id="plGo" type="submit">Import</button>
+    </form>
+    <p class="msg" id="plMsg" role="status"></p>
+    <div class="mem" id="plList"></div>
     <h2>What you're into</h2>
     <label>Genres</label>
     <div class="chips" id="genres"></div>
