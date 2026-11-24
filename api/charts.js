@@ -1,7 +1,7 @@
 // GET /api/charts — what's popular now and what just dropped, for free:
 //  - Charts come from Apple Music's keyless chart feed (updated daily).
-//  - "Just dropped" comes from Gemini with Google Search grounding (free tier), falling back to
-//    recently released songs already climbing Apple's chart.
+//  - "Just dropped" = songs released in the last 30 days that are already on Apple's chart.
+//    Optionally (GEMINI_SEARCH=on) Gemini with Google Search finds this week's releases instead.
 // Vercel's CDN caches the response for 6 hours, so this runs at most ~4 times a day.
 import { askGemini } from "../lib/gemini.js";
 import { appleFeedUrl, parseAppleFeed } from "../lib/apple.js";
@@ -31,7 +31,9 @@ export default async function handler(req, res) {
   // "Just dropped": try search-grounded Gemini models in order; keep Apple's list if all fail.
   // `freshSource` / `freshNote` say what happened (status codes only, never keys), to make issues easy to spot.
   charts.freshSource = "apple";
-  if (process.env.GEMINI_API_KEY) {
+  // Search grounding isn't included in Gemini's free tier for current models (requests return 429),
+  // so it only runs when you opt in with GEMINI_SEARCH=on (e.g. after enabling billing).
+  if (process.env.GEMINI_API_KEY && process.env.GEMINI_SEARCH === "on") {
     // Gemini 2.5 is closed to new accounts, so try current Flash models. Stay inside the 60 s function limit.
     const models = [...new Set([process.env.GEMINI_SEARCH_MODEL, "gemini-3.5-flash", "gemini-3.6-flash", "gemini-3.1-flash-lite"].filter(Boolean))];
     const notes = [];
@@ -56,9 +58,9 @@ export default async function handler(req, res) {
     }
     if (charts.freshSource === "apple") charts.freshNote = notes.join("; ");
   }
-  if (!charts.freshWhen) charts.freshWhen = "songs released in the last 3 weeks";
+  if (!charts.freshWhen) charts.freshWhen = "songs released in the last month that are already charting";
 
   // If new releases fell back to Apple, retry sooner than the usual 6 hours.
-  const cache = charts.freshSource === "apple" && process.env.GEMINI_API_KEY ? "public, s-maxage=3600" : CACHE_OK;
+  const cache = charts.freshSource === "apple" && process.env.GEMINI_SEARCH === "on" ? "public, s-maxage=3600" : CACHE_OK;
   send(res, 200, { ...charts, live: true }, { cache });
 }

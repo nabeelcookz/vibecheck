@@ -16,7 +16,7 @@ Pick a mood (Motivated, Sad, Main character, Sleep, Workout and more), and STAR_
 - **Mood-first queues.** 8 moods, each with its own definition (e.g. Workout means 120–160 BPM and no slow songs; Sad means the queue never tries to cheer you up), plus free-text detail like "Arabic only" or "leg day".
 - **Per-mood learning.** Every 1–10 rating stores the mood it was given in. The recommender weights same-mood ratings most, and also uses your average rating per genre.
 - **Autoplay.** Songs play back-to-back in the YouTube IFrame player; when the queue ends, it fetches more for the same mood. Rating a song 3 or lower skips it.
-- **Always current, for free.** `/api/charts` reads Apple Music's daily chart feed (no key needed) and asks Gemini, grounded in Google Search, for this week's new releases. The CDN caches the result for 6 hours, so it stays fresh without a database or cron job.
+- **Always current, for free.** `/api/charts` reads Apple Music's daily chart feed (no key needed). "Just dropped" shows songs released in the last 30 days that are already charting. The CDN caches the result for 6 hours, so it stays fresh without a database or cron job.
 - **Runs on free tiers.** Gemini's free tier, Apple's free chart feed, the free YouTube Data API quota and Vercel's free hosting. No credit card needed.
 - **Works where you listen.** One-tap links to YouTube Music, Apple Music, Spotify or YouTube, with your preferred service first.
 - **Installable.** A PWA with a manifest, icons and service worker, so you can add it to your home screen like a native app.
@@ -34,7 +34,7 @@ Browser (public/)                         Vercel serverless (api/)
 │  plays queue, auto-next   │──────────▶ │ /api/youtube  song → videoId │── YouTube Data API
 │                           │   GET      ├──────────────────────────────┤   (cached 7 days)
 │ Trending tab              │──────────▶ │ /api/charts                  │── Apple Music chart feed
-└───────────────────────────┘            └──────────────────────────────┘   + Gemini w/ Google Search
+└───────────────────────────┘            └──────────────────────────────┘   (free, no key)
                                                                              (cached 6 hours)
 ```
 
@@ -56,13 +56,15 @@ npm test                  # unit tests
 
 | Variable | Required | What it does |
 |---|---|---|
-| `GEMINI_API_KEY` | Yes | Mood queues and "Just dropped". Free key from [Google AI Studio](https://aistudio.google.com/apikey). |
+| `GEMINI_API_KEY` | Yes | Mood queues. Free key from [Google AI Studio](https://aistudio.google.com/apikey). |
 | `YOUTUBE_API_KEY` | For autoplay | Finds each song's video. Enable "YouTube Data API v3" in [Google Cloud Console](https://console.cloud.google.com). Free. Without it, songs open in your music app instead. |
 | `CHART_COUNTRY` | No | Apple Music chart country, e.g. `us`, `gb`, `ae`. Default `us`. |
 | `GEMINI_MODEL` / `GEMINI_SEARCH_MODEL` | No | Defaults to `gemini-3.5-flash`. For new releases the app tries a few current Flash models with Google Search and falls back to Apple's recent releases if none is available on your free tier. |
 | `APP_PASSCODE` | No | Requires a passcode before building queues. |
 
-Charts work with no keys at all. Without `GEMINI_API_KEY`, "Just dropped" shows recently released songs climbing Apple's chart. If Apple's feed is unreachable, the app falls back to a snapshot in `lib/seed.js`.
+| `GEMINI_SEARCH` | No | Set to `on` to have Gemini search the web for this week's releases. Google Search grounding isn't in the free tier for current models, so this needs billing enabled. |
+
+Charts work with no keys at all. If Apple's feed is unreachable, the app falls back to a snapshot in `lib/seed.js`.
 
 ## Deploy to Vercel
 

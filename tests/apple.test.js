@@ -24,7 +24,7 @@ test("parses ranks, labels and genres", () => {
   assert.equal(c.now.length, 4); // the entry with no title is dropped
 });
 
-test("fresh = charting songs released in the last 3 weeks", () => {
+test("fresh = charting songs released in the last 30 days", () => {
   const c = parseAppleFeed(feed, { today });
   assert.deepEqual(c.fresh.map((s) => s.t), ["Brand New"]);
   assert.equal(c.fresh[0].s, "Out 2026-11-20");
