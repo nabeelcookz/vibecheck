@@ -1,8 +1,8 @@
-/* STAR_BOA — black, electric purple, neon green for the pop */
+/* STAR_BOA — "Soft violet": black, deep violet + lilac (chill), neon green (pop) */
 :root {
   color-scheme: dark;
   --bg: #050507; --card: #111016; --ink: #f4f0ff; --mute: #a59fb8; --line: #2a2535;
-  --acc: #9d4dff; --accHi: #c08bff; --glow: #9d4dff66;
+  --acc: #3a2a6b; --accHi: #c9b3ff; --accInk: #f1ebff; --glow: #c9b3ff40;
   --neon: #39ff88; --neonInk: #031a0c; --neonGlow: #39ff8866;
 }
 * { box-sizing: border-box; min-width: 0; }
@@ -10,7 +10,7 @@ body {
   margin: 0; color: var(--ink); overflow-x: clip;
   font: 16px/1.55 Archivo, system-ui, sans-serif;
   background:
-    radial-gradient(900px 500px at 85% -10%, #9d4dff2e, transparent 70%),
+    radial-gradient(900px 500px at 85% -10%, #c9b3ff2e, transparent 70%),
     radial-gradient(700px 420px at -10% 105%, #39ff8814, transparent 70%),
     var(--bg);
   background-attachment: fixed;
@@ -22,7 +22,7 @@ body {
 }
 header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 h1 { display: inline-block; font-size: clamp(32px, 7vw, 48px); line-height: 1.05; margin: 0; font-weight: 800; letter-spacing: -.02em;
-  background: linear-gradient(90deg, #f4f0ff 0%, #c08bff 55%, var(--neon) 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+  background: linear-gradient(90deg, #f1ebff 0%, var(--accHi) 50%, var(--neon) 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
   filter: drop-shadow(0 0 18px var(--glow)); }
 h2 { font-size: 22px; line-height: 1.2; margin: 28px 0 6px; }
 .h3 { font-size: 20px; margin: 0 0 4px; }
@@ -34,7 +34,7 @@ h2 { font-size: 22px; line-height: 1.2; margin: 28px 0 6px; }
 
 nav { display: flex; gap: 6px; margin: 20px 0 18px; border-bottom: 1px solid var(--line); }
 nav a { flex: 1; text-align: center; padding: 12px 6px; color: var(--mute); text-decoration: none; font-weight: 700; border-bottom: 3px solid transparent; margin-bottom: -1px; }
-nav a[aria-current=page] { color: var(--ink); border-image: linear-gradient(90deg, var(--acc), var(--neon)) 1; }
+nav a[aria-current=page] { color: var(--ink); border-image: linear-gradient(90deg, var(--accHi), var(--neon)) 1; }
 section[hidden] { display: none; }
 
 button, .btn {
@@ -44,12 +44,13 @@ button, .btn {
 }
 button:disabled { opacity: .5; cursor: not-allowed; }
 :focus-visible { outline: 3px solid var(--accHi); outline-offset: 2px; }
-.primary, .btn.on { background: var(--acc); border-color: var(--accHi); color: #fff; }
+.primary, .btn.on { background: var(--acc); border-color: #c9b3ff66; color: var(--accInk); }
+.primary:hover, .btn.on:hover { border-color: var(--accHi); }
 input, textarea { font: inherit; font-size: 16px; width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--ink); }
 textarea { min-height: 84px; resize: vertical; margin-top: 8px; }
 label { font-weight: 700; display: block; margin: 18px 0 6px; }
 
-.hero { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 20px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 20px; box-shadow: 0 0 0 1px #9d4dff33, 0 10px 40px -20px var(--acc); }
+.hero { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 20px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 20px; box-shadow: 0 0 0 1px #c9b3ff33, 0 10px 40px -20px var(--acc); }
 .hero svg { width: 150px; height: 150px; }
 .spin .disc { animation: spin 1.6s linear infinite; transform-origin: 75px 75px; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -59,13 +60,13 @@ label { font-weight: 700; display: block; margin: 18px 0 6px; }
 .ask input { flex: 1 1 200px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chips button { border-radius: 99px; font-weight: 500; }
-.chips button[aria-pressed=true] { background: var(--acc); border-color: var(--accHi); color: #fff; box-shadow: 0 0 12px #9d4dff88; }
+.chips button[aria-pressed=true] { background: var(--acc); border-color: var(--accHi); color: var(--accInk); box-shadow: 0 0 14px #c9b3ff40; }
 
 .msg { min-height: 22px; font-size: 14px; color: var(--neon); margin: 8px 0 0; }
 .err { color: #ff8fb1; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 
-.np { margin-top: 16px; background: linear-gradient(160deg, #1a0b2e, #000 70%); border: 1px solid #9d4dff55; border-radius: 20px; padding: 20px; box-shadow: 0 0 40px -12px var(--acc); }
+.np { margin-top: 16px; background: linear-gradient(160deg, #1d1538, #000 70%); border: 1px solid #c9b3ff55; border-radius: 20px; padding: 20px; box-shadow: 0 0 40px -12px var(--acc); }
 .np .row button { flex: 1 1 auto; justify-content: center; }
 #playPause { background: var(--neon); border-color: var(--neon); color: var(--neonInk); box-shadow: 0 0 22px var(--neonGlow); }
 #playPause:hover { filter: brightness(1.08); }
@@ -83,7 +84,7 @@ label { font-weight: 700; display: block; margin: 18px 0 6px; }
 .a { color: var(--mute); }
 .why { font-size: 14px; margin: 4px 0 0; }
 .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-.tag { font-size: 13px; padding: 2px 8px; border-radius: 99px; background: #9d4dff26; }
+.tag { font-size: 13px; padding: 2px 8px; border-radius: 99px; background: var(--acc); color: var(--accHi); }
 .tag.src { background: transparent; border: 1px solid #39ff8855; color: var(--neon); }
 .acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .acts .btn, .acts button { min-height: 40px; padding: 0 12px; font-size: 14px; border-radius: 10px; }
@@ -100,7 +101,7 @@ label { font-weight: 700; display: block; margin: 18px 0 6px; }
 .mem i { color: var(--mute); font-style: normal; }
 .empty { color: var(--mute); font-size: 14px; }
 
-dialog { background: var(--card); color: var(--ink); border: 1px solid var(--acc); border-radius: 16px; max-width: 360px; width: 90vw; }
+dialog { background: var(--card); color: var(--ink); border: 1px solid var(--accHi); border-radius: 16px; max-width: 360px; width: 90vw; }
 dialog::backdrop { background: #000a; }
 
 @media (max-width: 600px) {
