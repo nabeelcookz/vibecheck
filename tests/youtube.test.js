@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseListId, songFromItem, isPrivateAutoList } from "../lib/youtube.js";
+import { parseListId, songFromItem, isPrivateAutoList, isMix } from "../lib/youtube.js";
 import { buildPicksPrompt } from "../lib/prompt.js";
 
 test("parseListId reads YouTube Music, YouTube and bare IDs", () => {
@@ -13,6 +13,11 @@ test("detects Liked Music and other private auto-lists", () => {
   assert.equal(isPrivateAutoList("https://music.youtube.com/playlist?list=LM"), true);
   assert.equal(isPrivateAutoList("WL"), true);
   assert.equal(isPrivateAutoList("https://music.youtube.com/playlist?list=PLabcdefghij123"), false);
+});
+
+test("detects auto-generated Mixes", () => {
+  assert.equal(isMix("https://youtube.com/playlist?list=RDwkz07LzGpcY&playnext=1&si=abc"), true);
+  assert.equal(isMix("https://music.youtube.com/playlist?list=PLabcdefghij123"), false);
 });
 
 test("parseListId rejects private auto-lists and junk", () => {

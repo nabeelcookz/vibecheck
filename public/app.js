@@ -262,6 +262,7 @@ $("importForm").addEventListener("submit", (e) => { e.preventDefault(); importPl
 
 const PL_ERRORS = {
   bad_playlist_link: "That doesn't look like a playlist link. In YouTube Music, open the playlist and use ⋮ → Share → Copy link.",
+  mix_not_playlist: "That's a YouTube Mix (auto-generated radio), not a playlist, and Mixes can't be read. Add the songs you like to one of your own playlists, set it to Unlisted, and import that link instead.",
   private_auto_list: "Liked Music is always private, so it can't be imported directly. In YouTube Music, open it, tap ⋮ → Save to playlist → New playlist, set it to Unlisted, then import that link.",
   playlist_not_found_or_private: "Couldn't open that playlist. Make sure it's Public or Unlisted, not Private. (Liked Music is always private: save it to a new Unlisted playlist first.)",
   youtube_not_configured: "Playlist import needs the YouTube API key set up on the server.",

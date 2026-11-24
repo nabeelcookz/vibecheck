@@ -1,7 +1,7 @@
 // GET /api/playlist?list=<playlist URL or ID> — reads a public or unlisted YouTube / YouTube Music
 // playlist so its songs can seed the listener's taste. Uses the same free YOUTUBE_API_KEY:
 // each page of 50 songs costs 1 quota unit (vs 100 for a search), so imports are cheap.
-import { parseListId, songFromItem, isPrivateAutoList } from "../lib/youtube.js";
+import { parseListId, songFromItem, isPrivateAutoList, isMix } from "../lib/youtube.js";
 import { send, rateLimit } from "../lib/http.js";
 
 const API = "https://www.googleapis.com/youtube/v3";
@@ -12,6 +12,7 @@ export default async function handler(req, res) {
   const key = process.env.YOUTUBE_API_KEY;
   if (!key) return send(res, 501, { error: "youtube_not_configured" });
   if (isPrivateAutoList(req.query?.list)) return send(res, 400, { error: "private_auto_list" });
+  if (isMix(req.query?.list)) return send(res, 400, { error: "mix_not_playlist" });
   const list = parseListId(req.query?.list);
   if (!list) return send(res, 400, { error: "bad_playlist_link" });
   if (!rateLimit(req, res, { max: 20 })) return;
