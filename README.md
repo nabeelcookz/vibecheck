@@ -9,7 +9,7 @@ Pick a mood (Motivated, Sad, Main character, Sleep, Workout and more), and Vibec
   <img src="docs/screenshot-player.png" width="300" alt="Now playing with 1–10 rating">
 </p>
 
-**Live demo:** [star-boa.vercel.app](https://star-boa.vercel.app)
+**Live demo:** [vibecheck-ae.vercel.app](https://vibecheck-ae.vercel.app)
 
 ## Features
 
